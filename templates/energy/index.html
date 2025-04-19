@@ -11,16 +11,16 @@
             <select name="region" id="region" class="form-select">
                 <option value="">All Regions</option>
                 {% for region in regions %}
-                    <option value="{{ region }}" {% if request.GET.region == region %}selected{% endif %}>{{ region }}</option>
+                    <option value="{{ region }}" {% if current_region == region %}selected{% endif %}>{{ region }}</option>
                 {% endfor %}
             </select>
         </div>
         <div class="col-md-4">
-            <label for="income_level" class="form-label">Income Level</label>
-            <select name="income_level" id="income_level" class="form-select">
+            <label for="income_group" class="form-label">Income Level</label>
+            <select name="income_group" id="income_group" class="form-select">
                 <option value="">All Income Levels</option>
                 {% for level in income_levels %}
-                    <option value="{{ level }}" {% if request.GET.income_level == level %}selected{% endif %}>{{ level }}</option>
+                    <option value="{{ level }}" {% if current_income == level %}selected{% endif %}>{{ level }}</option>
                 {% endfor %}
             </select>
         </div>
@@ -52,8 +52,9 @@
         <tbody>
             {% for country in countries %}
                 <tr>
+                    <td>{{ country.name }}</td>
                     <td>{{ country.region }}</td>
-                    <td>{{ country.income_level }}</td>
+                    <td>{{ country.income_group }}</td>
                     <td>{{ country.renewable_share|floatformat:2 }}</td>
                 </tr>
             {% empty %}
@@ -71,7 +72,7 @@
         <ul class="pagination justify-content-center">
             {% if page_obj.has_previous %}
                 <li class="page-item">
-                    <a class="page-link" href="?page={{ page_obj.previous_page_number }}{% if request.GET.region %}®ion={{ request.GET.region }}{% endif %}{% if request.GET.income_level %}&income_level={{ request.GET.income_level }}{% endif %}">Previous</a>
+                    <a class="page-link" href="?page={{ page_obj.previous_page_number }}{% if current_region %}&region={{ current_region }}{% endif %}{% if current_income %}&income_group={{ current_income }}{% endif %}">Previous</a>
                 </li>
             {% else %}
                 <li class="page-item disabled">
@@ -80,12 +81,12 @@
             {% endif %}
             {% for num in page_obj.paginator.page_range %}
                 <li class="page-item {% if page_obj.number == num %}active{% endif %}">
-                    <a class="page-link" href="?page={{ num }}{% if request.GET.region %}®ion={{ request.GET.region }}{% endif %}{% if request.GET.income_level %}&income_level={{ request.GET.income_level }}{% endif %}">{{ num }}</a>
+                    <a class="page-link" href="?page={{ num }}{% if current_region %}&region={{ current_region }}{% endif %}{% if current_income %}&income_group={{ current_income }}{% endif %}">{{ num }}</a>
                 </li>
             {% endfor %}
             {% if page_obj.has_next %}
                 <li class="page-item">
-                    <a class="page-link" href="?page={{ page_obj.next_page_number }}{% if request.GET.region %}®ion={{ request.GET.region }}{% endif %}{% if request.GET.income_level %}&income_level={{ request.GET.income_level }}{% endif %}">Next</a>
+                    <a class="page-link" href="?page={{ page_obj.next_page_number }}{% if current_region %}&region={{ current_region }}{% endif %}{% if current_income %}&income_group={{ current_income }}{% endif %}">Next</a>
                 </li>
             {% else %}
                 <li class="page-item disabled">
