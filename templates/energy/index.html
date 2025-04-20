@@ -36,6 +36,8 @@
         <h3>Renewable Energy Share Trend</h3>
         <img src="data:image/png;base64,{{ graphic }}" alt="Renewable Energy Trend" class="img-fluid" style="max-width: 100%;">
     </div>
+{% else %}
+    <div class="alert alert-warning">No chart available.</div>
 {% endif %}
 
 <!-- Data Table -->
@@ -52,7 +54,7 @@
         <tbody>
             {% for country in countries %}
                 <tr>
-                    <td>{{ country.name }}</td>
+                    <td><a href="{% url 'country_detail' country.id %}">{{ country.name }}</a></td>
                     <td>{{ country.region }}</td>
                     <td>{{ country.income_group }}</td>
                     <td>{{ country.renewable_share|floatformat:2 }}</td>
