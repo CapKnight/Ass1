@@ -59,3 +59,10 @@ def index(request):
         'current_income': selected_income,
     }
     return render(request, 'index.html', context)
+
+def country_detail(request, pk):
+    country = get_object_or_404(Country, pk=pk)
+    context = {
+        'country': country,
+    }
+    return render(request, 'energy/country_detail.html', context)
