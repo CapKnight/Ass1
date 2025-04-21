@@ -1,43 +1,101 @@
-{% extends 'base.html' %}
-{% block title %}{{ country.name|default:"Country" }} Data{% endblock %}
+{% extends 'energy/base.html' %}
+{% load static %}
+
+{% block title %}{{ country.name }} - Renewable Energy Data{% endblock %}
+
 {% block content %}
-    {% if error %}
-        <div class="alert alert-danger">{{ error }}</div>
-    {% else %}
-        <h2>{{ country.name }}</h2>
-        <p><strong>Region:</strong> {{ country.region }}</p>
-        <p><strong>Income Level:</strong> {{ country.income_group }}</p>
-        {% if chart_url %}
-            <div class="mb-4">
-                <h3>Renewable Energy Trend</h3>
-                <img src="data:image/png;base64,{{ chart_url }}" alt="{{ country.name }} Chart" class="img-fluid" style="max-width: 100%;">
+<div class="container mt-4">
+    <div class="row">
+        <div class="col-lg-4 mb-4">
+            <div class="card shadow-sm h-100">
+                <div class="card-header bg-primary text-white">
+                    <h4 class="mb-0">
+                        {{ country.name }}
+                        {% if country.code %}
+                        <small class="text-light">({{ country.code }})</small>
+                        {% endif %}
+                    </h4>
+                </div>
+                <div class="card-body">
+                    <dl class="row mb-0">
+                        <dt class="col-sm-5">Region</dt>
+                        <dd class="col-sm-7">{{ country.region|default:"N/A" }}</dd>
+
+                        <dt class="col-sm-5">Income Level</dt>
+                        <dd class="col-sm-7">{{ country.get_income_group_display|default:"N/A" }}</dd>
+                    </dl>
+                </div>
             </div>
-        {% else %}
-            <div class="alert alert-warning">No chart available.</div>
-        {% endif %}
-        <h3>Data Points</h3>
-        {% if country.energydata_set.all %}
-            <div class="table-responsive">
-                <table class="table table-striped table-bordered">
-                    <thead>
-                        <tr>
-                            <th>Year</th>
-                            <th>Renewable Share (%)</th>
-                        </tr>
-                    </thead>
-                    <tbody>
-                        {% for dp in country.energydata_set.all %}
-                            <tr>
-                                <td>{{ dp.year }}</td>
-                                <td>{{ dp.renewable_share|floatformat:2 }}</td>
-                            </tr>
-                        {% endfor %}
-                    </tbody>
-                </table>
+        </div>
+
+        <div class="col-lg-8">
+            {% if chart_url %}
+            <div class="card mb-4 shadow-sm">
+                <div class="card-body">
+                    <h5 class="card-title">
+                        <i class="bi bi-graph-up me-2"></i>Renewable Energy Trend
+                    </h5>
+                    <div class="chart-container border rounded p-2">
+                        <img src="data:image/png;base64,{{ chart_url }}" 
+                             alt="Renewable energy trend chart for {{ country.name }}"
+                             class="img-fluid">
+                    </div>
+                </div>
             </div>
-        {% else %}
-            <p>No data points available.</p>
-        {% endif %}
-        <p><a href="{% url 'index' %}" class="btn btn-primary">Back to Home</a></p>
-    {% endif %}
+            {% else %}
+            <div class="alert alert-warning d-flex align-items-center" role="alert">
+                <i class="bi bi-exclamation-triangle-fill me-2"></i>
+                <div>No energy trend data available for this country</div>
+            </div>
+            {% endif %}
+
+            <div class="card shadow-sm">
+                <div class="card-header">
+                    <h5 class="mb-0">
+                        <i class="bi bi-table me-2"></i>Historical Energy Data
+                    </h5>
+                </div>
+                <div class="card-body p-0">
+                    <div class="table-responsive">
+                        <table class="table table-hover mb-0">
+                            <thead class="table-light">
+                                <tr>
+                                    <th>Year</th>
+                                    <th class="text-end">Renewable (%)</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                {% for record in energy_data %}
+                                <tr>
+                                    <td>{{ record.year }}</td>
+                                    <td class="text-end">
+                                        {% if record.renewable_share is not None %}
+                                            {{ record.renewable_share|floatformat:2 }}
+                                        {% else %}
+                                            <span class="text-muted">No data</span>
+                                        {% endif %}
+                                    </td>
+                                </tr>
+                                {% empty %}
+                                <tr>
+                                    <td colspan="2" class="text-center text-muted py-3">
+                                        No historical data available
+                                    </td>
+                                </tr>
+                                {% endfor %}
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+
+            <div class="mt-4 text-end">
+                <a href="{% url 'energy:index' %}" class="btn btn-outline-primary">
+                    <i class="bi bi-arrow-left-circle me-2"></i>
+                    Back to Dashboard
+                </a>
+            </div>
+        </div>
+    </div>
+</div>
 {% endblock %}
