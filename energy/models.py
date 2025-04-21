@@ -6,10 +6,13 @@ class Country(models.Model):
     type = models.CharField(max_length=10, default='Unknown')
     region = models.CharField(max_length=50, default='Unknown')
     income_group = models.CharField(max_length=30, default='Unknown')
-    renewable_share = models.FloatField()
+    renewable_share = models.FloatField(help_text="Renewable energy share in 2015 (%)")
 
     def __str__(self):
         return self.name
+
+    class Meta:
+        ordering = ['name']
 
 class EnergyData(models.Model):
     country = models.ForeignKey(Country, on_delete=models.CASCADE)
@@ -18,3 +21,7 @@ class EnergyData(models.Model):
 
     def __str__(self):
         return f"{self.country.name} - {self.year}"
+
+    class Meta:
+        unique_together = ('country', 'year')
+        ordering = ['year']
