@@ -1,5 +1,6 @@
 from django.db import models
 
+# Class created for country model
 class Country(models.Model):
     name = models.CharField(max_length=100, unique=True)
     code = models.CharField(max_length=4, unique=True, null=True, blank=True)
