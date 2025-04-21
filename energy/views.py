@@ -1,170 +1,202 @@
 from django.shortcuts import render, get_object_or_404
-from .models import Country
 from django.core.paginator import Paginator
-import matplotlib.pyplot as plt
+from .models import Country, EnergyData
 import base64
 from io import BytesIO
+import matplotlib
+matplotlib.use('Agg')
+import matplotlib.pyplot as plt
 import logging
+from django.urls import reverse
+from django.db.models import Prefetch
 
-# Set up logging
 logger = logging.getLogger(__name__)
+YEARS_RANGE = range(1990, 2016)
 
 def index(request):
-    # Get filter parameters
-    selected_region = request.GET.get('region')
-    selected_income = request.GET.get('income_group')
+    try:
+        region = request.GET.get('region')
+        income_group = request.GET.get('income_group')
 
-    countries = Country.objects.all().order_by('name')
+        base_query = Country.objects.prefetch_related('energydata_set')
 
-    # Apply filters
-    if selected_region and selected_region != 'Unknown':
-        countries = countries.filter(region=selected_region)
-    if selected_income and selected_income != 'Unknown':
-        countries = countries.filter(income_group=selected_income)
+        all_countries = base_query.order_by('name')
 
-    # Pagination
-    paginator = Paginator(countries, 20)
-    page_number = request.GET.get('page')
-    page_obj = paginator.get_page(page_number)
+        filtered_countries = base_query
+        if region and region != 'Unknown':
+            filtered_countries = filtered_countries.filter(region=region)
+        if income_group and income_group != 'Unknown':
+            filtered_countries = filtered_countries.filter(income_group=income_group)
 
-    # Get filter options from database
-    regions = Country.objects.exclude(region='Unknown').values_list(
-        'region', flat=True).distinct().order_by('region')
-    income_levels = Country.objects.exclude(income_group='Unknown').values_list(
-        'income_group', flat=True).distinct().order_by('income_group')
+        paginator = Paginator(
+            filtered_countries.values_list(
+                'id', 'name', 'code', 'region', 'income_group'
+            ), 
+            20
+        )
+        page_number = request.GET.get('page')
+        page_obj = paginator.get_page(page_number)     
 
-    # Generate chart
-    graphic = None
-    if countries.exists():
+        country_data = []
+        for country_tuple in page_obj.object_list:
+            country = Country.objects.get(id=country_tuple[0])
+            energy_data = {str(ed.year): ed.renewable_share 
+                          for ed in country.energydata_set.all()}
+            data = {
+                'name': country_tuple[1],
+                'code': country_tuple[2],
+                'region': country_tuple[3],
+                'income_group': dict(Country.INCOME_LEVELS).get(country_tuple[4], 'Unknown'),
+                'energy': energy_data
+            }
+            country_data.append(data)
+
+        regions = Country.objects.exclude(region='Unknown') \
+            .values_list('region', flat=True) \
+            .distinct() \
+            .order_by('region')
+        income_groups = Country.INCOME_LEVELS
+
+        graphic = generate_chart(filtered_countries)
+
+        context = {
+            'all_countries': all_countries,
+            'country_data': country_data,
+            'years': YEARS_RANGE,
+            'regions': regions,
+            'income_groups': income_groups,
+            'current_region': region,
+            'current_income': income_group,
+            'graphic': graphic,
+            'page_obj': page_obj,
+        }
+        return render(request, 'energy/index.html', context)
+
+    except Exception as e:
+        logger.error(f"Error: {e}")
+        empty_paginator = Paginator([], 1)
+        page_obj = empty_paginator.page(1)
+    
+        return render(request, 'energy/index.html', {  # 合并为一个返回语句
+            'error': str(e),
+            'page_obj': page_obj,
+            'country_data': [],
+            'years': YEARS_RANGE,
+            'regions': [],
+            'income_groups': [],
+            'all_countries': Country.objects.none(),  # 空查询集
+            'current_region': None,
+            'current_income': None,
+            'graphic': None
+        })
+
+def generate_country_chart(energy_data):
+    """使用完整年份数据生成图表（包含空值）"""
+    try:
+        # 提取所有年份和值（包含 None）
+        all_years = [d['year'] for d in energy_data]
+        all_values = [d['renewable_share'] for d in energy_data]
+
         plt.figure(figsize=(12, 6))
-        top_countries = countries.order_by('-renewable_share')[:10]
-        country_names = [c.name for c in top_countries]
-        renewable_shares = [c.renewable_share for c in top_countries]
+        
+        # 绘制折线图（自动跳过 None 值）
+        plt.plot(all_years, all_values, 
+                marker='o', 
+                color='#2e7d32', 
+                linewidth=2,
+                markersize=8,
+                linestyle='-',
+                markeredgecolor='#2e7d32')
+        
+        # 强制设置完整X轴范围
+        plt.xticks(range(1990, 2016), rotation=45)
+        plt.xlim(1989.5, 2015.5)
+        plt.ylim(0, 100)
+        
+        # 添加图表标签
+        plt.title("Renewable Energy Trend (1990-2015)")
+        plt.xlabel('Year')
+        plt.ylabel('Renewable Share (%)')
+        plt.grid(True, alpha=0.3)
+        plt.tight_layout()
 
-        plt.barh(country_names, renewable_shares, color='#4CAF50')
-        plt.xlabel('Renewable Energy Share (%)')
-        plt.title('Top Renewable Energy Countries')
+        # 生成Base64图片
+        buffer = BytesIO()
+        plt.savefig(buffer, format='png', dpi=120, bbox_inches='tight')
+        chart_url = base64.b64encode(buffer.getvalue()).decode('utf-8')
+        plt.close()
+        
+        return chart_url
+    except Exception as e:
+        logger.error(f"Chart Generation Error: {str(e)}")
+        return None
+        
+def generate_chart(queryset):
+    try:
+        plt.figure(figsize=(12, 6))
+        valid_countries = [
+            c for c in queryset[:10]
+            if c.energydata_set.exists()
+        ]
+        
+        if not valid_countries:
+            return None
+
+        countries_data = []
+        renewable_share = []
+        
+        for country in queryset[:10]:  # 限制前10个国家
+            latest_data = country.energydata_set.order_by('-year').first()
+            if latest_data:
+                countries_data.append(f"{country.name}\n({country.code})")
+                renewable_share.append(latest_data.renewable_share)
+
+        plt.barh(countries_data, renewable_share, color='#2e7d32')
+        plt.xlabel('Latest Renewable Share (%)')
+        plt.title('Top Countries by Renewable Energy')
         plt.tight_layout()
 
         buffer = BytesIO()
-        plt.savefig(buffer, format='png', bbox_inches='tight')
+        plt.savefig(buffer, format='png')
         graphic = base64.b64encode(buffer.getvalue()).decode('utf-8')
         plt.close()
-
-    context = {
-        'countries': page_obj.object_list,
-        'regions': regions,
-        'income_levels': income_levels,
-        'graphic': graphic,
-        'page_obj': page_obj,
-        'is_paginated': page_obj.has_other_pages(),
-        'current_region': selected_region,
-        'current_income': selected_income,
-    }
-    return render(request, 'index.html', context)
+        return graphic
+    except Exception as e:
+        logger.error(f"Chart error: {e}")
+        return None
 
 def country_detail(request, pk):
-    country = get_object_or_404(Country, pk=pk)
+    country = get_object_or_404(
+        Country.objects.prefetch_related(
+            Prefetch(
+                'energydata_set',
+                queryset=EnergyData.objects.filter(
+                    year__gte=1990,
+                    year__lte=2015
+                ).order_by('year'),
+                to_attr='filtered_energy'
+            )
+        ),
+        pk=pk
+    )
+
+    full_energy_data = [
+        {
+            'year': year,
+            'renewable_share': next(
+                (ed.renewable_share for ed in country.filtered_energy if ed.year == year),
+                None
+            ),
+        }
+        for year in range(1990, 2016)
+    ]
+
+    chart_url = generate_country_chart(full_energy_data)
+
     context = {
         'country': country,
+        'energy_data': full_energy_data,
+        'chart_url': chart_url,
     }
+
     return render(request, 'energy/country_detail.html', context)
-    try:
-        # Get filter parameters
-        selected_region = request.GET.get('region')
-        selected_income = request.GET.get('income_group')
-
-        # Base queryset with select_related for performance
-        countries = Country.objects.select_related().all().order_by('name')
-
-        # Apply filters
-        if selected_region and selected_region != 'Unknown':
-            countries = countries.filter(region=selected_region)
-        if selected_income and selected_income != 'Unknown':
-            countries = countries.filter(income_group=selected_income)
-
-        # Pagination
-        paginator = Paginator(countries, 20)
-        page_number = request.GET.get('page')
-        page_obj = paginator.get_page(page_number)
-
-        # Get filter options from database
-        regions = Country.objects.exclude(region='Unknown').values_list(
-            'region', flat=True).distinct().order_by('region')
-        income_levels = Country.objects.exclude(income_group='Unknown').values_list(
-            'income_group', flat=True).distinct().order_by('income_group')
-
-        # Generate chart
-        graphic = None
-        if countries.exists():
-            try:
-                plt.figure(figsize=(12, 6))
-                top_countries = countries.order_by('-renewable_share')[:10]
-                country_names = [c.name for c in top_countries]
-                renewable_shares = [c.renewable_share for c in top_countries]
-
-                plt.barh(country_names, renewable_shares, color='#4CAF50')
-                plt.xlabel('Renewable Energy Share (%)')
-                plt.title('Top Renewable Energy Countries (2015)')
-                plt.tight_layout()
-
-                buffer = BytesIO()
-                plt.savefig(buffer, format='png', bbox_inches='tight')
-                graphic = base64.b64encode(buffer.getvalue()).decode('utf-8')
-                plt.close()
-            except Exception as e:
-                logger.error(f"Error generating index chart: {e}")
-                graphic = None
-
-        context = {
-            'countries': page_obj.object_list,
-            'regions': regions,
-            'income_levels': income_levels,
-            'graphic': graphic,
-            'page_obj': page_obj,
-            'is_paginated': page_obj.has_other_pages(),
-            'current_region': selected_region,
-            'current_income': selected_income,
-            'no_data_message': 'No countries match the selected filters.' if not countries.exists() else None,
-        }
-        return render(request, 'index.html', context)
-    except Exception as e:
-        logger.error(f"Error in index view: {e}")
-        return render(request, 'index.html', {'error': 'An error occurred while loading the page.'})
-
-def country_detail(request, pk):
-    try:
-        country = get_object_or_404(Country, pk=pk)
-        datapoints = country.energydata_set.all().order_by('year')
-
-        # Generate chart
-        chart_url = None
-        if datapoints.exists():
-            try:
-                plt.figure(figsize=(10, 6))
-                years = [dp.year for dp in datapoints]
-                values = [dp.renewable_share for dp in datapoints]
-                plt.plot(years, values, marker='o', color='#4CAF50')
-                plt.title(f'Renewable Energy Trend for {country.name}')
-                plt.xlabel('Year')
-                plt.ylabel('Renewable Share (%)')
-                plt.grid(True)
-                plt.tight_layout()
-
-                buffer = BytesIO()
-                plt.savefig(buffer, format='png', bbox_inches='tight')
-                chart_url = base64.b64encode(buffer.getvalue()).decode('utf-8')
-                plt.close()
-            except Exception as e:
-                logger.error(f"Error generating chart for {country.name}: {e}")
-                chart_url = None
-
-        context = {
-            'country': country,
-            'chart_url': chart_url,
-            'error': None if datapoints.exists() else 'No data points available.',
-        }
-        return render(request, 'country_detail.html', context)
-    except Exception as e:
-        logger.error(f"Error in country_detail view: {e}")
-        return render(request, 'country_detail.html', {'error': 'An error occurred while loading the country data.'})
