@@ -5,6 +5,11 @@ import matplotlib.pyplot as plt
 import base64
 from io import BytesIO
 import logging
+import folium
+import geopandas as gpd
+import os
+from django.conf import settings
+import pandas as pd
 
 # Set up logging
 logger = logging.getLogger(__name__)
@@ -109,3 +114,93 @@ def country_detail(request, pk):
     except Exception as e:
         logger.error(f"Error in country_detail view: {e}")
         return render(request, 'country_detail.html', {'error': 'An error occurred while loading the country data.'})
+
+def map_view(request):
+    try:
+        # Initialize Folium map centered on the world
+        m = folium.Map(
+            location=[20, 0],
+            zoom_start=2,
+            tiles="cartodbpositron",
+            max_bounds=True,
+            min_zoom=2,
+            max_zoom=10,
+        )
+
+        # Load GeoJSON file
+        geojson_path = os.path.join(settings.STATIC_ROOT or settings.STATICFILES_DIRS[0], 'geojson', 'ne_110m_admin_0_countries.geojson')
+        if not os.path.exists(geojson_path):
+            logger.error(f"GeoJSON file not found at {geojson_path}")
+            return render(request, 'map.html', {'error': 'Map data not found.'})
+
+        gdf = gpd.read_file(geojson_path)
+
+        # Get country data from database (latest year, e.g., 2015)
+        countries = Country.objects.all()
+        energy_data = EnergyData.objects.filter(year=2015).select_related('country')
+
+        # Create a DataFrame for merging
+        data = pd.DataFrame([
+            {
+                'name': ed.country.name,
+                'renewable_share': ed.renewable_share,
+                'code': ed.country.code,
+            }
+            for ed in energy_data
+        ])
+
+        # Merge GeoJSON with country data
+        gdf = gdf.merge(data, how='left', left_on='SOV_A3', right_on='code')
+
+        # Add choropleth layer
+        folium.Choropleth(
+            geo_data=gdf,
+            name='Renewable Energy',
+            data=data,
+            columns=['name', 'renewable_share'],
+            key_on='feature.properties.NAME',
+            fill_color='YlGn',
+            fill_opacity=0.7,
+            line_opacity=0.2,
+            legend_name='Renewable Energy Share (%)',
+            nan_fill_color='gray',
+            nan_fill_opacity=0.4,
+        ).add_to(m)
+
+        # Add GeoJSON layer for interactivity
+        folium.GeoJson(
+            gdf,
+            name='Countries',
+            style_function=lambda x: {
+                'fillColor': '#cccccc' if pd.isna(x['properties']['renewable_share']) else None,
+                'color': 'black',
+                'weight': 1,
+                'fillOpacity': 0.7,
+            },
+            tooltip=folium.GeoJsonTooltip(
+                fields=['NAME', 'renewable_share'],
+                aliases=['Country:', 'Renewable Share (%):'],
+                localize=True,
+                sticky=True,
+            ),
+            popup=folium.GeoJsonPopup(
+                fields=['NAME', 'renewable_share'],
+                aliases=['Country:', 'Renewable Share (%):'],
+                labels=True,
+            ),
+        ).add_to(m)
+
+        # Add layer control
+        folium.LayerControl().add_to(m)
+
+        # Save map to HTML string
+        map_html = m._repr_html_()
+
+        context = {
+            'map_html': map_html,
+            'error': None,
+        }
+        return render(request, 'map.html', context)
+    except Exception as e:
+        logger.error(f"Error generating map: {e}")
+        return render(request, 'map.html', {'error': 'An error occurred while generating the map.'})
