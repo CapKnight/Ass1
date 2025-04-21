@@ -7,6 +7,11 @@ import matplotlib
 matplotlib.use('Agg')
 import matplotlib.pyplot as plt
 import logging
+import folium
+import geopandas as gpd
+import os
+from django.conf import settings
+import pandas as pd
 from django.urls import reverse
 from django.db.models import Prefetch
 
@@ -77,14 +82,14 @@ def index(request):
         empty_paginator = Paginator([], 1)
         page_obj = empty_paginator.page(1)
     
-        return render(request, 'energy/index.html', {  # 合并为一个返回语句
+        return render(request, 'energy/index.html', {
             'error': str(e),
             'page_obj': page_obj,
             'country_data': [],
             'years': YEARS_RANGE,
             'regions': [],
             'income_groups': [],
-            'all_countries': Country.objects.none(),  # 空查询集
+            'all_countries': Country.objects.none(),
             'current_region': None,
             'current_income': None,
             'graphic': None
@@ -93,7 +98,6 @@ def index(request):
 def generate_country_chart(energy_data):
     """使用完整年份数据生成图表（包含空值）"""
     try:
-        # 提取所有年份和值（包含 None）
         all_years = [d['year'] for d in energy_data]
         all_values = [d['renewable_share'] for d in energy_data]
 
@@ -108,29 +112,24 @@ def generate_country_chart(energy_data):
                 linestyle='-',
                 markeredgecolor='#2e7d32')
         
-        # 强制设置完整X轴范围
         plt.xticks(range(1990, 2016), rotation=45)
         plt.xlim(1989.5, 2015.5)
         plt.ylim(0, 100)
-        
-        # 添加图表标签
         plt.title("Renewable Energy Trend (1990-2015)")
         plt.xlabel('Year')
         plt.ylabel('Renewable Share (%)')
         plt.grid(True, alpha=0.3)
         plt.tight_layout()
 
-        # 生成Base64图片
         buffer = BytesIO()
         plt.savefig(buffer, format='png', dpi=120, bbox_inches='tight')
         chart_url = base64.b64encode(buffer.getvalue()).decode('utf-8')
         plt.close()
-        
         return chart_url
     except Exception as e:
         logger.error(f"Chart Generation Error: {str(e)}")
         return None
-        
+
 def generate_chart(queryset):
     try:
         plt.figure(figsize=(12, 6))
@@ -145,7 +144,7 @@ def generate_chart(queryset):
         countries_data = []
         renewable_share = []
         
-        for country in queryset[:10]:  # 限制前10个国家
+        for country in queryset[:10]:
             latest_data = country.energydata_set.order_by('-year').first()
             if latest_data:
                 countries_data.append(f"{country.name}\n({country.code})")
@@ -171,8 +170,7 @@ def country_detail(request, pk):
             Prefetch(
                 'energydata_set',
                 queryset=EnergyData.objects.filter(
-                    year__gte=1990,
-                    year__lte=2015
+                    year__range=(1990, 2015)
                 ).order_by('year'),
                 to_attr='filtered_energy'
             )
@@ -198,5 +196,94 @@ def country_detail(request, pk):
         'energy_data': full_energy_data,
         'chart_url': chart_url,
     }
-
     return render(request, 'energy/country_detail.html', context)
+
+def map_view(request):
+    try:
+        # Initialize Folium map
+        m = folium.Map(
+            location=[20, 0],
+            zoom_start=2,
+            tiles="cartodbpositron",
+            max_bounds=True,
+            min_zoom=2,
+            max_zoom=10,
+        )
+
+        # Load GeoJSON file
+        geojson_path = os.path.join(
+            settings.STATIC_ROOT or settings.STATICFILES_DIRS[0], 
+            'geojson', 
+            'ne_110m_admin_0_countries.geojson'
+        )
+        if not os.path.exists(geojson_path):
+            logger.error(f"GeoJSON file not found at {geojson_path}")
+            return render(request, 'map.html', {'error': 'Map data not found.'})
+
+        gdf = gpd.read_file(geojson_path)
+
+        # Get country data
+        countries = Country.objects.all()
+        energy_data = EnergyData.objects.filter(year=2015).select_related('country')
+
+        # Create DataFrame
+        data = pd.DataFrame([
+            {
+                'name': ed.country.name,
+                'renewable_share': ed.renewable_share,
+                'code': ed.country.code,
+            }
+            for ed in energy_data
+        ])
+
+        # Merge data
+        gdf = gdf.merge(data, how='left', left_on='SOV_A3', right_on='code')
+
+        # Add choropleth layer
+        folium.Choropleth(
+            geo_data=gdf,
+            name='Renewable Energy',
+            data=data,
+            columns=['name', 'renewable_share'],
+            key_on='feature.properties.NAME',
+            fill_color='YlGn',
+            fill_opacity=0.7,
+            line_opacity=0.2,
+            legend_name='Renewable Energy Share (%)',
+            nan_fill_color='gray',
+            nan_fill_opacity=0.4,
+        ).add_to(m)
+
+        # Add interactive layer
+        folium.GeoJson(
+            gdf,
+            name='Countries',
+            style_function=lambda x: {
+                'fillColor': '#cccccc' if pd.isna(x['properties']['renewable_share']) else None,
+                'color': 'black',
+                'weight': 1,
+                'fillOpacity': 0.7,
+            },
+            tooltip=folium.GeoJsonTooltip(
+                fields=['NAME', 'renewable_share'],
+                aliases=['Country:', 'Renewable Share (%):'],
+                localize=True,
+                sticky=True,
+            ),
+            popup=folium.GeoJsonPopup(
+                fields=['NAME', 'renewable_share'],
+                aliases=['Country:', 'Renewable Share (%):'],
+                labels=True,
+            ),
+        ).add_to(m)
+
+        folium.LayerControl().add_to(m)
+        map_html = m._repr_html_()
+
+        return render(request, 'energy/map.html', {
+            'map_html': map_html,
+            'error': None
+        })
+    except Exception as e:
+        logger.error(f"Error generating map: {e}")
+        return render(request, 'energy/map.html', {'error': str(e)})
