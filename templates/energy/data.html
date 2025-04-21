@@ -1,21 +1,31 @@
-{% extends "energy/base.html" %}
+{% extends "base.html" %}
 
-{% block title %}Data List - {{ block.super }}{% endblock %}
+{% block title %}Data List - Renewable Energy Dashboard{% endblock %}
 
 {% block content %}
 <h2>Latest Energy Data</h2>
-<table border="1" style="width: 100%; border-collapse: collapse;">
-    <tr style="background-color: #f2f2f2;">
-        <th style="padding: 8px;">Country</th>
-        <th style="padding: 8px;">Year</th>
-        <th style="padding: 8px;">Renewable %</th>
-    </tr>
-    {% for item in energy_data %}
-    <tr>
-        <td style="padding: 8px; border: 1px solid #ddd;">{{ item.country.name }}</td>
-        <td style="padding: 8px; border: 1px solid #ddd;">{{ item.year }}</td>
-        <td style="padding: 8px; border: 1px solid #ddd;">{{ item.renewable_pct }}%</td>
-    </tr>
-    {% endfor %}
-</table>
+{% if energy_data %}
+    <div class="table-responsive">
+        <table class="table table-striped table-bordered">
+            <thead>
+                <tr>
+                    <th>Country</th>
+                    <th>Year</th>
+                    <th>Renewable Share (%)</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for item in energy_data %}
+                <tr>
+                    <td>{{ item.country.name }}</td>
+                    <td>{{ item.year }}</td>
+                    <td>{{ item.renewable_share|floatformat:2 }}%</td>
+                </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    </div>
+{% else %}
+    <div class="alert alert-warning">No energy data available.</div>
+{% endif %}
 {% endblock %}
