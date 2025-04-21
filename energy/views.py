@@ -10,7 +10,6 @@ def index(request):
     selected_region = request.GET.get('region')
     selected_income = request.GET.get('income_group')
 
-    # Base queryset
     countries = Country.objects.all().order_by('name')
 
     # Apply filters
