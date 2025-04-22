@@ -5,7 +5,16 @@ class Country(models.Model):
     code = models.CharField(max_length=4, unique=True, null=True, blank=True)
     type = models.CharField(max_length=10, default='Unknown')
     region = models.CharField(max_length=50, default='Unknown')
-    income_group = models.CharField(max_length=30, default='Unknown')
+    INCOME_GROUP_CHOICES = [
+        ('High income', 'High income'),
+        ('Low income', 'Low income'),
+        ('Lower middle', 'Lower middle income'),
+        ('Upper middle', 'Upper middle income'),
+    ]
+    income_group = models.CharField(
+        max_length=20, choices=INCOME_GROUP_CHOICES, blank=True, null=True
+    )
+
     renewable_share = models.FloatField(help_text="Renewable energy share in 2015 (%)")
 
     def __str__(self):

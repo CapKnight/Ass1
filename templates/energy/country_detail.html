@@ -1,4 +1,4 @@
-{% extends 'base.html' %}
+{% extends 'energy/base.html' %}
 {% block title %}{{ country.name|default:"Country" }} Data{% endblock %}
 {% block content %}
     {% if error %}
@@ -38,6 +38,6 @@
         {% else %}
             <p>No data points available.</p>
         {% endif %}
-        <p><a href="{% url 'index' %}" class="btn btn-primary">Back to Home</a></p>
+        <p><a href="{% url 'energy:index' %}" class="btn btn-primary">Back to Home</a></p>
     {% endif %}
 {% endblock %}

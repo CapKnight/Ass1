@@ -106,6 +106,3 @@ class Command(BaseCommand):
             f"Total energy records: {EnergyData.objects.count()}"
         ))
 
-        self.stdout.write(self.style.SUCCESS(f"Year columns: {year_columns}"))
-        self.stdout.write(self.style.SUCCESS(f"Headers: {headers}"))
-
