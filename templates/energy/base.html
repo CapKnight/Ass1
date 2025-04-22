@@ -8,13 +8,17 @@
     <style>
         body {
             background-color: #f4f7f6;
-            color: #222;
+            color: #333;
         }
         .navbar-brand, .nav-link {
             color: #ffffff !important;
         }
         .navbar {
             background-color: #2e7d32; /* Green theme */
+        }
+        .nav-link.active {
+            background-color: #4caf50; /* 高亮当前页面 */
+            border-radius: 5px;
         }
         .footer {
             background-color: #2e7d32;
@@ -50,18 +54,17 @@
             <div class="collapse navbar-collapse" id="navbarNav">
                 <ul class="navbar-nav ms-auto">
                     <li class="nav-item">
-                        <a class="nav-link" href="{% url 'energy:index' %}">Home</a>
+                        <a class="nav-link {% if request.resolver_match.url_name == 'index' %}active{% endif %}" href="{% url 'energy:index' %}">Home</a>
                     </li>
                     <li class="nav-item">
-                        <a class="nav-link" href="{% url 'energy:map' %}">Map</a>
-                    </li>
-                    <li class="nav-item">
-                        <a class="nav-link" href="#">About</a>
+                        <a class="nav-link {% if request.resolver_match.url_name == 'map' %}active{% endif %}" href="{% url 'energy:map' %}">Map</a>
                     </li>
                 </ul>
             </div>
         </div>
     </nav>
+
+    <!-- Main Content -->
     <div class="container mt-4 mb-4">
         {% if messages %}
             <div class="alert alert-warning">
@@ -74,10 +77,12 @@
         {% endblock %}
     </div>
 
+    <!-- Footer -->
     <footer class="footer">
         <p>© 2025 Renewable Energy Dashboard. All rights reserved.</p>
     </footer>
 
+    <!-- Bootstrap JS Bundle with Popper -->
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
-<script>(function(){function c(){var b=a.contentDocument||a.contentWindow.document;if(b){var d=b.createElement('script');d.innerHTML="window.__CF$cv$params={r:'9337d2a549a96775',t:'MTc0NTE4NTQ2NS4wMDAwMDA='};var a=document.createElement('script');a.nonce='';a.src='/cdn-cgi/challenge-platform/scripts/jsd/main.js';document.getElementsByTagName('head')[0].appendChild(a);";b.getElementsByTagName('head')[0].appendChild(d)}}if(document.body){var a=document.createElement('iframe');a.height=1;a.width=1;a.style.position='absolute';a.style.top=0;a.style.left=0;a.style.border='none';a.style.visibility='hidden';document.body.appendChild(a);if('loading'!==document.readyState)c();else if(window.addEventListener)document.addEventListener('DOMContentLoaded',c);else{var e=document.onreadystatechange||function(){};document.onreadystatechange=function(b){e(b);'loading'!==document.readyState&&(document.onreadystatechange=e,c())}}}})();</script></body>
+</body>
 </html>

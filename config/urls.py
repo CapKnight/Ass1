@@ -2,9 +2,10 @@ from django.contrib import admin
 from django.urls import path, include
 from energy import views
 
+app_name = 'energy'
+
 urlpatterns = [
     path('admin/', admin.site.urls),
-    
     path('', include(
         ([
             path('', views.index, name='index'),
