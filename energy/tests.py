@@ -25,7 +25,6 @@ class EnergyModelsTestCase(TestCase):
         self.assertEqual(str(self.energy_data), "Test Country - 2020")
 
     def test_unique_energy_data(self):
-        # Test unique_together constraint
         with self.assertRaises(Exception):
             EnergyData.objects.create(
                 country=self.country,

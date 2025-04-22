@@ -105,4 +105,3 @@ class Command(BaseCommand):
             f"Total countries: {Country.objects.count()}\n"
             f"Total energy records: {EnergyData.objects.count()}"
         ))
-
