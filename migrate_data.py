@@ -1,5 +1,6 @@
-import os
+
 import csv
+import os
 import logging
 from django.conf import settings
 from django.core.management.base import BaseCommand
@@ -42,7 +43,8 @@ class Command(BaseCommand):
 
         success_count = 0
         error_count = 0
-
+        
+# will handle the errors
         try:
             with open(file_path, encoding='utf-8') as f:
                 reader = csv.DictReader(f)
