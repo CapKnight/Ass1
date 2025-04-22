@@ -3,49 +3,16 @@ from django.core.validators import MinValueValidator, MaxValueValidator
 from django.core.exceptions import ValidationError
 
 class Country(models.Model):
-    """
-    Core country information model
-    """
-    
-    INCOME_LEVELS = [
-        ('L', 'Low income'),
-        ('LM', 'Lower middle income'),
-        ('UM', 'Upper middle income'), 
-        ('H', 'High income'),
-    ]
-    
-    name = models.CharField(
-        max_length=100,
-        unique=True,
-        verbose_name="Country Name"
-    )
-    
-    code = models.CharField(
-        max_length=4,
-        unique=True,
-        null=True,
-        blank=True,
-        verbose_name="Country Code"
-    )
-    
-    region = models.CharField(
-        max_length=50,
-        default='Unknown',
-        verbose_name="Region"
-    )
-    
-    income_group = models.CharField(
-        max_length=30,
-        choices=INCOME_LEVELS,
-        default='Unknown',
-        verbose_name="Income Group"
-    )
+    name = models.CharField(max_length=100, unique=True,)
+    code = models.CharField(max_length=10, unique=True, default='UNKOWN')
+    type = models.CharField(max_length=10, unique=True, default='country')
+    region = models.CharField(max_length=100, null=True, blank=True)
+    income_group = models.CharField(max_length=50, null=True, blank=True)
     
     def __str__(self):
         return f"{self.name} ({self.code})" if self.code else self.name
         
     def get_latest_energy_data(self):
-        """Retrieve most recent energy data"""
         return self.energydata_set.order_by('-year').first()
         
     class Meta:
@@ -59,10 +26,7 @@ class Country(models.Model):
 
 
 class EnergyData(models.Model):
-    """
-    Annual energy metrics by country
-    """
-    
+
     country = models.ForeignKey(
         Country,
         on_delete=models.CASCADE,

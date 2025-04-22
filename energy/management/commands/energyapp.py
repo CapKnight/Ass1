@@ -40,7 +40,7 @@ class Command(BaseCommand):
         # Get headers
         headers = [cell.value for cell in sheet[4]]
         required_columns = ['Country Name', 'Country Code', 'Type', 'Region', 'IncomeGroup']
-
+        #print(headers)
         # Validate headers
         missing = [col for col in required_columns if col not in headers]
         if missing:
@@ -54,8 +54,8 @@ class Command(BaseCommand):
 
         success_count = 0
         error_count = 0
-        year_columns = [str(year) for year in range(1990, 2016)]  # All years from 1990 to 2015
-
+        #year_columns = [str(year) for year in range(1990, 2016)]  # All years from 1990 to 2015
+        year_columns = list(range(1990, 2016))
         # Read data rows
         rows = list(sheet.iter_rows(min_row=5, values_only=True))
         
@@ -72,7 +72,7 @@ class Command(BaseCommand):
                         'type': row[headers.index('Type')] or 'Unknown',
                         'region': row[headers.index('Region')] or 'Unknown',
                         'income_group': row[headers.index('IncomeGroup')] or 'Unknown',
-                        'renewable_share': float(row[headers.index('2015')] or 0.0)
+                        'renewable_share': float(row[headers.index(2015)] or 0.0)
                     }
                 )
 
@@ -92,7 +92,7 @@ class Command(BaseCommand):
                                 renewable_share=value
                             )
                         )
-                
+                print(energy_data)
                 EnergyData.objects.bulk_create(energy_data, ignore_conflicts=True)
                 success_count += 1
                 

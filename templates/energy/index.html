@@ -89,7 +89,7 @@
                   <td>{{ data.income_group }}</td>
                   {% for year in years %}
                   <td class="text-end">
-                    {{ data.energy|get_item:year|floatformat:2|default:"-" }}%
+                    {{ data.energy|get_item:year|display_percent }}
                   </td>
                   {% endfor %}
                 </tr>
