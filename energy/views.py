@@ -96,7 +96,6 @@ def index(request):
         })
 
 def generate_country_chart(energy_data):
-    """使用完整年份数据生成图表（包含空值）"""
     try:
         all_years = [d['year'] for d in energy_data]
         all_values = [d['renewable_share'] for d in energy_data]
@@ -218,7 +217,7 @@ def map_view(request):
         )
         if not os.path.exists(geojson_path):
             logger.error(f"GeoJSON file not found at {geojson_path}")
-            return render(request, 'map.html', {'error': 'Map data not found.'})
+            return render(request, 'energy/map.html', {'error': 'Map data not found.'})
 
         gdf = gpd.read_file(geojson_path)
 
