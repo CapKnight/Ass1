@@ -54,7 +54,7 @@ class Command(BaseCommand):
 
         success_count = 0
         error_count = 0
-        year_columns = [str(year) for year in range(1990, 2016)]  # All years from 1990 to 2015
+        year_columns = [str(year) for year in range(1990, 2016)]
 
         # Read data rows
         rows = list(sheet.iter_rows(min_row=5, values_only=True))
@@ -105,3 +105,7 @@ class Command(BaseCommand):
             f"Total countries: {Country.objects.count()}\n"
             f"Total energy records: {EnergyData.objects.count()}"
         ))
+
+        self.stdout.write(self.style.SUCCESS(f"Year columns: {year_columns}"))
+        self.stdout.write(self.style.SUCCESS(f"Headers: {headers}"))
+
