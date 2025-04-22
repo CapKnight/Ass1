@@ -44,7 +44,7 @@ class Command(BaseCommand):
         success_count = 0
         error_count = 0
         
-# error handling
+# will handle the errors
         try:
             with open(file_path, encoding='utf-8') as f:
                 reader = csv.DictReader(f)
