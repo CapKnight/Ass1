@@ -19,8 +19,8 @@
             <label for="income_group" class="form-label">Income Level</label>
             <select name="income_group" id="income_group" class="form-select">
                 <option value="">All Income Levels</option>
-                {% for level in income_levels %}
-                    <option value="{{ level }}" {% if current_income == level %}selected{% endif %}>{{ level }}</option>
+                {% for group in income_groups %}  <!-- 调整为 income_groups -->
+                    <option value="{{ group }}" {% if current_income == group %}selected{% endif %}>{{ group }}</option>
                 {% endfor %}
             </select>
         </div>
@@ -48,7 +48,7 @@
                 <th>Country</th>
                 <th>Region</th>
                 <th>Income Level</th>
-                <th>Renewable Share (%)</th>
+                <th>Renewable Share At 2015(%)</th>
             </tr>
         </thead>
         <tbody>
@@ -57,7 +57,13 @@
                     <td><a href="{% url 'energy:country_detail' country.id %}">{{ country.name }}</a></td>
                     <td>{{ country.region }}</td>
                     <td>{{ country.income_group }}</td>
-                    <td>{{ country.renewable_share|floatformat:2 }}</td>
+                    <td>
+                        {% if country.renewable_share_2015 is not None %}
+                            {{ country.renewable_share_2015|floatformat:2 }}
+                        {% else %}
+                            N/A
+                        {% endif %}
+                    </td>
                 </tr>
             {% empty %}
                 <tr>

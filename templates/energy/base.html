@@ -16,6 +16,10 @@
         .navbar {
             background-color: #2e7d32; /* Green theme */
         }
+        .nav-link.active {
+            background-color: #4caf50; /* 高亮当前页面 */
+            border-radius: 5px;
+        }
         .footer {
             background-color: #2e7d32;
             color: white;
@@ -50,10 +54,10 @@
             <div class="collapse navbar-collapse" id="navbarNav">
                 <ul class="navbar-nav ms-auto">
                     <li class="nav-item">
-                        <a class="nav-link" href="{% url 'energy:index' %}">Home</a>
+                        <a class="nav-link {% if request.resolver_match.url_name == 'index' %}active{% endif %}" href="{% url 'energy:index' %}">Home</a>
                     </li>
                     <li class="nav-item">
-                        <a class="nav-link" href="#">About</a>
+                        <a class="nav-link {% if request.resolver_match.url_name == 'map' %}active{% endif %}" href="{% url 'energy:map' %}">Map</a>
                     </li>
                 </ul>
             </div>
