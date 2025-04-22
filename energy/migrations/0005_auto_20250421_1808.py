@@ -9,11 +9,19 @@ def transfer_data(apps, schema_editor):
     EnergyData = apps.get_model('energy', 'EnergyData')
     
     for country in Country.objects.exclude(renewable_share__isnull=True):
-        EnergyData.objects.create(
-            country=country,
-            year=2015, 
-            renewable_share=country.renewable_share
-        )
+        # 检查是否已存在 (country, 2015) 记录
+        existing = EnergyData.objects.filter(country=country, year=2015).first()
+        if existing:
+            # 如果存在，更新记录
+            existing.renewable_share = country.renewable_share
+            existing.save()
+        else:
+            # 如果不存在，创建新记录
+            EnergyData.objects.create(
+                country=country,
+                year=2015,
+                renewable_share=country.renewable_share
+            )
 
 class Migration(migrations.Migration):
 
