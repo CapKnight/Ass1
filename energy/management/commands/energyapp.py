@@ -6,7 +6,7 @@ from openpyxl import load_workbook
 from tqdm import tqdm
 from energy.models import Country, EnergyData
 
-# Set up logging
+# Setting up the log
 logger = logging.getLogger(__name__)
 
 class Command(BaseCommand):
@@ -22,7 +22,7 @@ class Command(BaseCommand):
     def handle(self, *args, **options):
         file_path = os.path.join(settings.BASE_DIR, options['file'])
         
-        # Check if file exists
+        # Check if the file exist
         if not os.path.exists(file_path):
             self.stderr.write(self.style.ERROR(f"File not found: {file_path}"))
             return
@@ -37,7 +37,7 @@ class Command(BaseCommand):
             self.stderr.write(self.style.ERROR(f"Error loading Excel file: {e}"))
             return
 
-        # Get headers
+        # Get the headers
         headers = [cell.value for cell in sheet[4]]
         required_columns = ['Country Name', 'Country Code', 'Type', 'Region', 'IncomeGroup']
 

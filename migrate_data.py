@@ -1,5 +1,6 @@
-import os
+
 import csv
+import os
 import logging
 from django.conf import settings
 from django.core.management.base import BaseCommand
