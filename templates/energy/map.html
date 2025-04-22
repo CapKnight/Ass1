@@ -1,0 +1,15 @@
+{% extends 'base.html' %}
+{% block title %}Interactive World Map - Renewable Energy Dashboard{% endblock %}
+{% block content %}
+<h1 class="mb-4">Interactive World Map</h1>
+
+{% if error %}
+    <div class="alert alert-danger">{{ error }}</div>
+{% else %}
+    <div class="mb-4">
+        <p>Click on a country to view its renewable energy data for 2015.</p>
+        {{ map_html|safe }}
+    </div>
+    <p><a href="{% url 'index' %}" class="btn btn-primary">Back to Home</a></p>
+{% endif %}
+{% endblock %}
