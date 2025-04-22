@@ -15,7 +15,13 @@ class Country(models.Model):
         max_length=20, choices=INCOME_GROUP_CHOICES, blank=True, null=True
     )
 
-    renewable_share = models.FloatField(help_text="Renewable energy share in 2015 (%)")
+    renewable_share = models.FloatField(
+        help_text="Renewable energy share in 2015 (%)",
+        default=0.0,
+        null=True,
+        blank=True
+    )
+    # renewable_share = models.FloatField(help_text="Renewable energy share in 2015 (%)")
 
     def __str__(self):
         return self.name
