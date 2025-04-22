@@ -16,7 +16,7 @@ from django.urls import reverse
 from django.db.models import Prefetch
 
 logger = logging.getLogger(__name__)
-YEARS_RANGE = range(1990, 2016)
+YEARS_RANGE = range(1990, 2016) #make sure the year is right
 
 def index(request):
     try:
