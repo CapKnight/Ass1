@@ -1,0 +1,245 @@
+{% extends 'energy/base.html' %}
+{% block title %}Compare Countries - Renewable Energy Dashboard{% endblock %}
+{% block content %}
+<style>
+    /* 保持原有样式不变 */
+    .container { display: flex; height: calc(100vh - 100px); margin: 20px; }
+    .left-panel { width: 200px; overflow-y: auto; border-right: 1px solid #ccc; padding: 10px; }
+    .country-item { display: flex; justify-content: space-between; align-items: center; padding: 5px; margin: 2px 0; }
+    .country-item.selected { background-color: #d4edda; border-radius: 4px; }
+    .add-btn { cursor: pointer; color: #28a745; font-weight: bold; }
+    .add-btn:hover { color: #218838; }
+    .right-panel { flex: 1; padding: 20px; }
+    .selected-countries { border: 2px solid #007bff; padding: 10px; margin-bottom: 20px; min-height: 50px; background-color: #f8f9fa; border-radius: 5px; }
+    .selected-countries h3 { margin-top: 0; }
+    .selected-country { display: inline-flex; align-items: center; background-color: #007bff; color: white; padding: 5px 10px; margin: 5px; border-radius: 4px; }
+    .remove-btn { cursor: pointer; color: #dc3545; margin-left: 8px; font-weight: bold; }
+    .remove-btn:hover { color: #c82333; }
+    .chart-container { max-width: 800px; margin: 20px 0; position: relative; }
+    .legend { margin-top: 10px; display: flex; flex-wrap: wrap; }
+    .legend-item { display: flex; align-items: center; margin-right: 20px; }
+    .legend-color { width: 20px; height: 2px; margin-right: 5px; }
+    .error-message { color: #dc3545; margin-top: 10px; }
+    .table { width: 100%; border-collapse: collapse; margin-top: 20px; }
+    .table th, .table td { border: 1px solid #ddd; padding: 8px; text-align: center; }
+    .table th { background-color: #f2f2f2; font-weight: bold; }
+    .table tr:nth-child(even) { background-color: #f9f9f9; }
+    .table tr:hover { background-color: #f1f1f1; }
+</style>
+
+<div class="container">
+    <div class="left-panel">
+        <h3>Countries</h3>
+        {% for country in countries %}
+        <div class="country-item {% if country.id|stringformat:'s' in selected_countries %}selected{% endif %}" 
+             data-country-id="{{ country.id }}">
+            <span>{{ country.name }}</span>
+            <span class="add-btn" 
+                  onclick="toggleCountry('{{ country.id }}')">+</span>
+        </div>
+        {% endfor %}
+    </div>
+
+    <div class="right-panel">
+        <h1>Compare Countries</h1>
+
+        <div class="selected-countries">
+            <h3>Selected Countries</h3>
+            {% for country in selected_countries_qs %}
+            <span class="selected-country">
+                {{ country.name }}
+                <span class="remove-btn" 
+                      onclick="toggleCountry('{{ country.id }}')">×</span>
+            </span>
+            {% empty %}
+            <span class="no-selection">No countries selected</span>
+            {% endfor %}
+        </div>
+
+        {% if error %}
+        <div class="error-message">{{ error }}</div>
+        {% endif %}
+
+        {% if selected_countries and not error %}
+        <div class="chart-container">
+            <canvas id="chart" width="800" height="400"></canvas>
+            <div class="legend" id="legend"></div>
+            <div id="chart-error" class="error-message"></div>
+        </div>
+        {{ datasets|json_script:"chart-datasets" }}
+        <script>
+            document.addEventListener('DOMContentLoaded', () => {
+                try {
+                    const canvas = document.getElementById('chart');
+                    const ctx = canvas.getContext('2d');
+                    const years = {{ years|safe }};
+                    const datasets = JSON.parse(document.getElementById('chart-datasets').textContent);
+                    
+                    // 清除旧图表
+                    ctx.clearRect(0, 0, canvas.width, canvas.height);
+
+                    // 验证数据
+                    const validData = datasets.filter(d => d.data.some(v => v !== null));
+                    if (validData.length === 0) {
+                        document.getElementById('chart-error').textContent = 'No valid data to display';
+                        return;
+                    }
+
+                    // 计算布局参数
+                    const padding = 60;
+                    const chartWidth = 800 - padding * 2;
+                    const chartHeight = 400 - padding * 2;
+                    const maxValue = Math.max(...validData.flatMap(d => d.data.filter(v => v !== null)));
+
+                    // 绘制坐标轴
+                    ctx.beginPath();
+                    ctx.strokeStyle = '#666';
+                    // X轴
+                    ctx.moveTo(padding, padding + chartHeight);
+                    ctx.lineTo(padding + chartWidth, padding + chartHeight);
+                    // Y轴
+                    ctx.moveTo(padding, padding + chartHeight);
+                    ctx.lineTo(padding, padding);
+                    ctx.stroke();
+                    ctx.font = '12px Arial';
+                    ctx.fillStyle = '#000';
+                    ctx.textBaseline = 'middle';
+
+                    // 1. X 轴：画年度刻度并居中写年份
+                    years.forEach((year, i) => {
+                        const x = padding + (i * (chartWidth / (years.length - 1)));
+                        const y = padding + chartHeight;
+                        // 刻度线
+                        ctx.beginPath();
+                        ctx.moveTo(x, y);
+                        ctx.lineTo(x, y + 6);
+                        ctx.stroke();
+                        // 年份文字（居中）
+                        const txt = String(year);
+                        const txtW = ctx.measureText(txt).width;
+                        ctx.fillText(txt, x - txtW / 2, y + 16);
+                    });
+
+                    // 2. Y 轴：分成 5 等份，画百分比刻度
+                    const tickCount = 5;
+                    for (let i = 0; i <= tickCount; i++) {
+                        const v = maxValue * (i / tickCount);
+                        const y = padding + chartHeight - (v / maxValue * chartHeight);
+                        // 刻度线
+                        ctx.beginPath();
+                        ctx.moveTo(padding, y);
+                        ctx.lineTo(padding - 6, y);
+                        ctx.stroke();
+                        // 百分比文字（右对齐）
+                        const label = Math.round(v) + '%';
+                        const txtW = ctx.measureText(label).width;
+                        ctx.fillText(label, padding - txtW - 10, y);
+                    }
+
+                    // 3. 轴标签：X 轴写 “Year”，Y 轴写 “Renewable Share (%)”
+                    // X 轴标签
+                    const xLabel = 'Year';
+                    const xLabelW = ctx.measureText(xLabel).width;
+                    ctx.fillText(
+                    xLabel,
+                    padding + chartWidth / 2 - xLabelW / 2,
+                    padding + chartHeight + 40
+                    );
+
+                    // Y 轴标签（需要旋转画布）
+                    const yLabel = 'Renewable Share (%)';
+                    const yLabelW = ctx.measureText(yLabel).width;
+                    ctx.save();
+                    // 移到文本要写的位置，再逆时针旋转 90°
+                    ctx.translate(padding - 50, padding + chartHeight / 2 + yLabelW / 2);
+                    ctx.rotate(-Math.PI / 2);
+                    ctx.fillText(yLabel, 0, 0);
+                    ctx.restore();
+                    // 绘制折线
+                    validData.forEach(dataset => {
+                        ctx.beginPath();
+                        ctx.strokeStyle = dataset.borderColor;
+                        ctx.lineWidth = 2;
+
+                        let previousPoint = null;
+                        
+                        dataset.data.forEach((value, index) => {
+                            if (value === null) return;
+                            
+                            const x = padding + (index * (chartWidth / (years.length - 1)));
+                            const y = padding + chartHeight - (value / maxValue * chartHeight);
+                            
+                            if (previousPoint) {
+                                ctx.moveTo(previousPoint.x, previousPoint.y);
+                                ctx.lineTo(x, y);
+                                ctx.stroke();
+                            }
+                            previousPoint = {x, y};
+                        });
+                    });
+
+                    // 绘制图例
+                    const legend = document.getElementById('legend');
+                    legend.innerHTML = validData.map(d => `
+                        <div class="legend-item">
+                            <div class="legend-color" style="background:${d.borderColor}"></div>
+                            ${d.label}
+                        </div>
+                    `).join('');
+
+                } catch (error) {
+                    document.getElementById('chart-error').textContent = `Chart error: ${error.message}`;
+                }
+            });
+        </script>
+        {% endif %}
+
+        {% if selected_countries and not error %}
+        <table class="table">
+            <thead>
+                <tr>
+                    <th>Year</th>
+                    {% for country in selected_countries_qs %}
+                    <th>{{ country.name }}</th>
+                    {% endfor %}
+                </tr>
+            </thead>
+            <tbody>
+                {% for row in table_data %}
+                <tr>
+                    <td>{{ row.year }}</td>
+                    {% for country in selected_countries_qs %}
+                    <td>
+                        {% with data=row.countries|dict_key:country.id %}
+                            {{ data.renewable_share|floatformat:2|default:"-" }}%
+                        {% endwith %}
+                    </td>
+                    {% endfor %}
+                </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+        {% else %}
+        <p>Select countries to compare data</p>
+        {% endif %}
+    </div>
+</div>
+
+<script>
+    function toggleCountry(countryId) {
+        const url = new URL(window.location.href);
+        const params = url.searchParams;
+        const current = params.getAll('countries');
+        const strId = String(countryId);
+
+        const newIds = current.includes(strId) 
+            ? current.filter(id => id !== strId)
+            : [...current, strId];
+
+        params.delete('countries');
+        newIds.forEach(id => params.append('countries', id));
+        
+        window.location.href = url.toString();
+    }
+</script>
+{% endblock %}

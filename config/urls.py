@@ -11,6 +11,7 @@ urlpatterns = [
             path('', views.index, name='index'),
             path('country/<int:pk>/', views.country_detail, name='country_detail'),
             path('map/', views.map_view, name='map'),
+            path('compare/', views.compare_countries, name='compare'),
         ], 'energy'),
         namespace='energy'
     )),
