@@ -2,9 +2,20 @@
 {% block title %}Compare Countries - Renewable Energy Dashboard{% endblock %}
 {% block content %}
 <style>
-    /* 保持原有样式不变 */
-    .container { display: flex; height: calc(100vh - 100px); margin: 20px; }
-    .left-panel { width: 200px; overflow-y: auto; border-right: 1px solid #ccc; padding: 10px; }
+    .container { 
+        display: flex; 
+        flex-grow: 1; 
+        margin: 20px; 
+        min-height: 0; 
+    }
+    .left-panel, .right-panel {
+        min-height: 0; 
+        overflow: hidden; 
+    }
+    .table-container {
+    overflow-x: auto;
+    max-width: 100%;
+    }
     .country-item { display: flex; justify-content: space-between; align-items: center; padding: 5px; margin: 2px 0; }
     .country-item.selected { background-color: #d4edda; border-radius: 4px; }
     .add-btn { cursor: pointer; color: #28a745; font-weight: bold; }
