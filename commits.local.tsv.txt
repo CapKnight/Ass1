@@ -1,0 +1,46 @@
+07e85ea2	YUCHEN LI	Thu Apr 24 23:46:59 2025	final check: run test and delete pyc
+449d32aa	CapKnight	Thu Apr 24 13:11:32 2025	Merge pull request #16 from CapKnight/Uyi
+35dca4fa	CapKnight	Wed Apr 23 23:36:10 2025	Merge pull request #15 from CapKnight/html
+6df3a999	YUCHEN LI	Wed Apr 23 23:34:59 2025	fix layout
+8d933cf2	CapKnight	Wed Apr 23 22:39:25 2025	Merge pull request #14 from CapKnight/li
+ff2c241f	YUCHEN LI	Wed Apr 23 22:37:39 2025	add new feature: compare countries
+61262ffc	CapKnight	Tue Apr 22 23:53:20 2025	Merge pull request #13 from CapKnight/save_in_case
+80481b92	YUCHEN LI	Tue Apr 22 23:32:55 2025	fix migration problems
+535fc348	jst-uyi	Tue Apr 22 23:22:41 2025	Initial commit from Codio
+bee9b925	CapKnight	Tue Apr 22 21:46:08 2025	Merge pull request #11 from CapKnight/save_in_case
+ae44a330	YUCHEN LI	Tue Apr 22 21:45:13 2025	Resolved conflict: keep save_in_case branch
+b95d8687	YUCHEN LI	Tue Apr 22 21:21:50 2025	fix the static map, fix bugs, edit the index page
+663cd927	YUCHEN LI	Tue Apr 22 20:14:07 2025	fix bugs
+042bd57b	YUCHEN LI	Tue Apr 22 18:37:33 2025	rerun energyapp to read the right data
+08535094	CapKnight	Tue Apr 22 17:05:53 2025	Merge pull request #10 from CapKnight/muzaffar
+bc84613c	YUCHEN LI	Tue Apr 22 16:49:59 2025	save all the files in case
+424972f3	MUZAFFAR SALEEM	Tue Apr 22 16:47:03 2025	updated migrate.py
+f4c31a21	MUZAFFAR SALEEM	Tue Apr 22 16:40:13 2025	updated migrate.py
+1838c116	MUZAFFAR SALEEM	Tue Apr 22 16:37:54 2025	updated migrate.py
+8d43d84d	MUZAFFAR SALEEM	Tue Apr 22 16:31:45 2025	update energy.py
+4d2d6755	CapKnight	Tue Apr 22 16:00:31 2025	Merge pull request #9 from CapKnight/teammate-feature
+d086ae1f	YUCHEN LI	Tue Apr 22 15:58:58 2025	fix bugs
+4f38ce34	CapKnight	Tue Apr 22 15:55:19 2025	Merge pull request #8 from CapKnight/Syedshah
+749d0f2b	SYED IFTEKHAR SHAH	Tue Apr 22 15:54:14 2025	update views.py
+6284a5e7	CapKnight	Tue Apr 22 15:37:49 2025	Merge pull request #7 from CapKnight/Uyi
+f28caba0	CapKnight	Tue Apr 22 15:37:27 2025	Merge branch 'main' into Uyi
+74e95398	jst-uyi	Tue Apr 22 15:26:24 2025	message
+f5532465	jst-uyi	Tue Apr 22 15:15:22 2025	Update index.html
+475afc27	CapKnight	Mon Apr 21 22:44:51 2025	Merge pull request #6 from CapKnight/qihangwan
+904cba27	CapKnight	Mon Apr 21 22:43:36 2025	Merge branch 'main' into qihangwan
+df4b66ee	CapKnight	Mon Apr 21 22:29:21 2025	Merge pull request #5 from CapKnight/teammate-feature
+cdf3df92	YUCHEN LI	Mon Apr 21 22:21:05 2025	edit html files
+a268598c	qihang wan	Mon Apr 21 19:49:52 2025	natural earth
+73ff88f8	jst-uyi	Mon Apr 21 16:20:24 2025	Update index.html
+9be8234a	CapKnight	Mon Apr 21 13:52:14 2025	Merge pull request #4 from CapKnight/syedshah
+71f010fe	SYED IFTEKHAR SHAH	Mon Apr 21 13:48:33 2025	updating models.py
+f76cb6f5	CapKnight	Mon Apr 21 13:36:17 2025	Merge pull request #3 from CapKnight/syedshah
+679fcb06	SYED IFTEKHAR SHAH	Mon Apr 21 13:33:54 2025	update
+383d89ef	CapKnight	Mon Apr 21 13:21:38 2025	Merge pull request #2 from CapKnight/teammate-feature
+a413cd1b	YUCHEN LI	Mon Apr 21 12:58:49 2025	modified some files and set django
+e69e2038	qihang wan	Mon Apr 21 10:49:54 2025	new
+08bcb4ce	YUCHEN LI	Sun Apr 20 20:45:25 2025	modified views.py
+a7d009a0	qihang wan	Sun Apr 20 20:16:30 2025	changes
+5d267f95	YUCHEN LI	Sat Apr 19 13:42:44 2025	Updated views.py, mange.py, index.html, models.py
+fa6d016f	YUCHEN LI	Fri Apr 18 14:16:07 2025	upload the database and update the models.py
+97abcfea	YUCHEN LI	Fri Apr 18 11:07:16 2025	inital backend code
