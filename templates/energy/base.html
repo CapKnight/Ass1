@@ -10,6 +10,7 @@
         body {
             background-color: #f4f7f6;
             color: #333;
+            padding-bottom: 60px;
         }
         .navbar-brand, .nav-link {
             color: #ffffff !important;
@@ -26,9 +27,11 @@
             color: white;
             padding: 1rem 0;
             text-align: center;
-            position: relative;
+            position: fixed;
             bottom: 0;
             width: 100%;
+            z-index: 10;
+
         }
         .table thead {
             background-color: #4caf50;
@@ -42,6 +45,26 @@
             background-color: #388e3c;
             border-color: #388e3c;
         }
+
+        /* Style country links */
+        .table a {
+        text-decoration: none;    /* removed the link underline */
+        color: #333;               
+        font-weight: 500;
+        transition: color 0.3s, background-color 0.3s;
+        padding: 4px 8px;
+        border-radius: 4px;
+        }
+
+        /* Hover effect */
+        .table a:hover {
+        color: white;
+        background-color: #007bff; 
+        text-decoration: none;
+        }
+
+
+
     </style>
     <script>
     (async () => {
