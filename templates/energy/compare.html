@@ -85,30 +85,26 @@
                     const ctx = canvas.getContext('2d');
                     const years = {{ years|safe }};
                     const datasets = JSON.parse(document.getElementById('chart-datasets').textContent);
-                    
-                    // 清除旧图表
+
                     ctx.clearRect(0, 0, canvas.width, canvas.height);
 
-                    // 验证数据
                     const validData = datasets.filter(d => d.data.some(v => v !== null));
                     if (validData.length === 0) {
                         document.getElementById('chart-error').textContent = 'No valid data to display';
                         return;
                     }
 
-                    // 计算布局参数
                     const padding = 60;
                     const chartWidth = 800 - padding * 2;
                     const chartHeight = 400 - padding * 2;
                     const maxValue = Math.max(...validData.flatMap(d => d.data.filter(v => v !== null)));
 
-                    // 绘制坐标轴
                     ctx.beginPath();
                     ctx.strokeStyle = '#666';
-                    // X轴
+                    // X
                     ctx.moveTo(padding, padding + chartHeight);
                     ctx.lineTo(padding + chartWidth, padding + chartHeight);
-                    // Y轴
+                    // Y
                     ctx.moveTo(padding, padding + chartHeight);
                     ctx.lineTo(padding, padding);
                     ctx.stroke();
@@ -116,39 +112,36 @@
                     ctx.fillStyle = '#000';
                     ctx.textBaseline = 'middle';
 
-                    // 1. X 轴：画年度刻度并居中写年份
                     years.forEach((year, i) => {
                         const x = padding + (i * (chartWidth / (years.length - 1)));
                         const y = padding + chartHeight;
-                        // 刻度线
+
                         ctx.beginPath();
                         ctx.moveTo(x, y);
                         ctx.lineTo(x, y + 6);
                         ctx.stroke();
-                        // 年份文字（居中）
+
                         const txt = String(year);
                         const txtW = ctx.measureText(txt).width;
                         ctx.fillText(txt, x - txtW / 2, y + 16);
                     });
 
-                    // 2. Y 轴：分成 5 等份，画百分比刻度
+
                     const tickCount = 5;
                     for (let i = 0; i <= tickCount; i++) {
                         const v = maxValue * (i / tickCount);
                         const y = padding + chartHeight - (v / maxValue * chartHeight);
-                        // 刻度线
+
                         ctx.beginPath();
                         ctx.moveTo(padding, y);
                         ctx.lineTo(padding - 6, y);
                         ctx.stroke();
-                        // 百分比文字（右对齐）
+
                         const label = Math.round(v) + '%';
                         const txtW = ctx.measureText(label).width;
                         ctx.fillText(label, padding - txtW - 10, y);
                     }
 
-                    // 3. 轴标签：X 轴写 “Year”，Y 轴写 “Renewable Share (%)”
-                    // X 轴标签
                     const xLabel = 'Year';
                     const xLabelW = ctx.measureText(xLabel).width;
                     ctx.fillText(
@@ -157,16 +150,15 @@
                     padding + chartHeight + 40
                     );
 
-                    // Y 轴标签（需要旋转画布）
                     const yLabel = 'Renewable Share (%)';
                     const yLabelW = ctx.measureText(yLabel).width;
                     ctx.save();
-                    // 移到文本要写的位置，再逆时针旋转 90°
+
                     ctx.translate(padding - 50, padding + chartHeight / 2 + yLabelW / 2);
                     ctx.rotate(-Math.PI / 2);
                     ctx.fillText(yLabel, 0, 0);
                     ctx.restore();
-                    // 绘制折线
+
                     validData.forEach(dataset => {
                         ctx.beginPath();
                         ctx.strokeStyle = dataset.borderColor;
@@ -189,7 +181,6 @@
                         });
                     });
 
-                    // 绘制图例
                     const legend = document.getElementById('legend');
                     legend.innerHTML = validData.map(d => `
                         <div class="legend-item">

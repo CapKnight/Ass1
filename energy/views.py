@@ -250,12 +250,10 @@ def dict_key(d, key):
 
 def compare_countries(request):
     try:
-        # 处理国家选择参数
         selected_ids = [cid for cid in request.GET.getlist('countries') if cid.isdigit()]
         valid_countries = Country.objects.filter(id__in=selected_ids)
         sorted_countries = valid_countries.order_by('name')
 
-        # 准备基础上下文
         context = {
             'countries': Country.objects.all().order_by('name'),
             'selected_countries': selected_ids,
@@ -267,7 +265,6 @@ def compare_countries(request):
         }
 
         if sorted_countries.exists():
-            # 获取年份数据
             years = list(EnergyData.objects.filter(
                 country__in=sorted_countries
             ).values_list('year', flat=True).distinct().order_by('year'))
@@ -277,7 +274,6 @@ def compare_countries(request):
             
             context['years'] = years
 
-            # 准备图表数据
             all_energy_data = {
                 (data.country_id, data.year): data.renewable_share
                 for data in EnergyData.objects.filter(
@@ -300,7 +296,6 @@ def compare_countries(request):
                 })
             context['datasets'] = datasets
 
-            # 准备表格数据
             table_data = []
             for year in years:
                 row = {'year': year, 'countries': {}}
