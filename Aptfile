@@ -1,0 +1,3 @@
+libssl-dev    # SSL（cryptography）
+libffi-dev    # C
+libpq-dev     # PostgreSQL
