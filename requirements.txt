@@ -3,6 +3,11 @@ gunicorn==21.2.0
 whitenoise==6.6.0
 psycopg2-binary==2.9.5
 django-heroku==0.3.1
+geopandas==0.13.2
+fiona==1.9.5
+shapely==2.0.1
+pyproj==3.6.1
+rtree==1.0.1
 dj-database-url==1.2.0
 python-decouple==3.8 
 requests==2.31.0
