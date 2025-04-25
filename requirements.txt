@@ -7,7 +7,7 @@ chardet==3.0.4
 commentjson==0.9.0
 cycler==0.10.0
 decorator==4.1.2
-Django==1.11.29
+Django==3.2.22
 docopt==0.6.2
 enum34==1.1.6
 httplib2==0.9.2
@@ -48,3 +48,4 @@ urllib3==1.22
 wcwidth==0.1.7
 websockify==0.9.0
 yarg==0.1.10
+gunicorn==21.2.0
