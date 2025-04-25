@@ -121,7 +121,7 @@ class IndexViewTest(TestCase):
         mock_plt.savefig = mock_savefig
         response = self.client.get(reverse('energy:index'))
         self.assertEqual(response.status_code, 200)
-        self.assertEqual(response.context['graphic'], None)  # 验证 graphic 为 None
+        self.assertEqual(response.context['graphic'], None)
 
 class CountryDetailViewTest(TestCase):
     def setUp(self):
@@ -165,22 +165,18 @@ class MapViewTest(TestCase):
     @patch('energy.views.gpd.read_file')
     @patch('energy.views.folium.Map')
     def test_map_view(self, mock_map, mock_read_file, mock_choropleth, mock_geojson):
-        # 模拟 folium.Map 的返回值
         mock_map_instance = MagicMock()
         mock_map_instance._repr_html_.return_value = "<div>Mock Map</div>"
         mock_map.return_value = mock_map_instance
 
-        # 模拟 geopandas 的 GeoDataFrame
         mock_gdf = MagicMock()
         mock_merged_gdf = MagicMock()
         mock_gdf.merge.return_value = mock_merged_gdf
         mock_read_file.return_value = mock_gdf
 
-        # 模拟 folium.Choropleth 和 folium.GeoJson
         mock_choropleth.return_value = MagicMock()
         mock_geojson.return_value = MagicMock()
 
-        # 模拟 pandas DataFrame
         with patch('energy.views.pd.DataFrame', return_value=MagicMock()):
             response = self.client.get(reverse('energy:map'))
             self.assertEqual(response.status_code, 200)
