@@ -15,7 +15,7 @@ A web application that visualizes renewable energy output as a percentage of tot
 ## Setup Instructions
 
 Follow these steps to set up the project locally:
-(If using Codio, the environment is pre-configured; simply start the server and access via the Box URL)
+**(If using my Codio, the environment is pre-configured; simply use these two lines: `source .venv/bin/activate` and `python3 manage.py runserver 0.0.0.0:8000`)**
 
 1. Run `git clone https://github.com/CapKnight/Ass1.git` to clone the code to your device.
 
@@ -30,6 +30,8 @@ Follow these steps to set up the project locally:
 6. Install required packages: `pip install -r requirements.txt`.
 
 7. Start the server: `python3 manage.py runserver 0.0.0.0:8000`.
+
+8. Copy this in a new tab to access th websit `https://watchquest-analogbogart-8000.codio-box.uk/`
 
 ## Prerequisites
 
