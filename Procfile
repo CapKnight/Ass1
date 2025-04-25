@@ -1,1 +1,1 @@
-web: gunicorn energy.wsgi:application
+web: gunicorn config.wsgi:application
